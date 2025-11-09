@@ -31,5 +31,17 @@ def predict_image(img_path):
         print(f"Prediction failed: {e}")
 
 if __name__=="__main__":
-    img_path=sys.argv[1] if len(sys.argv)>1 else input("Enter image path: ").strip()
+    
+    if len(sys.argv) > 1:
+        img_path = sys.argv[1]
+    else:
+        print("\nEnter the full path to your image file (you can drag and drop the image here):")
+        print("Example: C:\\Users\\Pictures\\my_image.jpg")
+        img_path = input("> ").strip()
+        
+        
+        img_path = img_path.strip('"\'')
+    
+    
+    img_path = os.path.abspath(img_path)
     predict_image(img_path)
