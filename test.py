@@ -1,26 +1,35 @@
+import os
+import sys
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras.preprocessing import image
-import os
+from PIL import Image
 
 model=tf.keras.models.load_model("cnn_model.h5")
-
-
-class_names= sorted(os.listdir("train_classification"))
+names=['fish','jellyfish','penguin','puffin','shark','starfish','stingray']
 
 def predict_image(img_path):
-    img=image.load_img(img_path,        target_size=(224,224))
-    img_array=image.img_to_array(img)
-    img_array=np.expand_dims(img_array, axis=0)
-    img_array=img_array / 255.0 
+    if not os.path.exists(img_path):
+        print(f"Image not found: {img_path}")
+        return
+    try:
+        img=Image.open(img_path).convert('RGB').resize((96,96))
+        img_array=np.asarray(img).astype('float32')/255.0
+        img_array=np.expand_dims(img_array,axis=0)
+    except Exception as e:
+        print(f"Couldn't process the image: {e}")
+        return
+    try:
+        predictions=model.predict(img_array,verbose=0)
+        predicted_class=np.argmax(predictions[0])
+        confidence=np.max(predictions[0])*100
+        print("\nTop predictions:")
+        top_indices=np.argsort(predictions[0])[::-1][:3]
+        for idx in top_indices:
+            print(f"  {names[idx]}: {predictions[0][idx]*100:.2f}%")
+        print(f"\nPrediction: {names[predicted_class]} ({confidence:.2f}% confidence)")
+    except Exception as e:
+        print(f"Prediction failed: {e}")
 
-   
-    predictions=model.predict(img_array)
-    predicted_class=np.argmax(predictions[0])
-    confidence=np.max(predictions[0])*100
-
-    print(f"Predicted Class: {class_names[predicted_class]} ({confidence:.2f}% confidence)")
-
-if __name__ == "__main__":
-    img_path = input("Enter image path: ").strip()
+if __name__=="__main__":
+    img_path=sys.argv[1] if len(sys.argv)>1 else input("Enter image path: ").strip()
     predict_image(img_path)
